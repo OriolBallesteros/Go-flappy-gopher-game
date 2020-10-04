@@ -1,9 +1,9 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"os"
+	"runtime"
 	"time"
 
 	"github.com/veandco/go-sdl2/sdl"
@@ -41,21 +41,23 @@ func run() error {
 	}
 	time.Sleep(2 * time.Second)
 
-	// Show scene; managed with goroutine
+	// Show scene
 	scene, err := newScene(rend)
 	if err != nil {
 		fmt.Errorf("Could not create scene: %v", err)
 	}
 	defer scene.destroy()
 
-	// run a scene with context
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	select {
-	case err := <-scene.run(ctx, rend):
-		return err
-	case <-time.After(5 * time.Second):
-		return nil
+	// Run scene; goRoutine
+	events := make(chan sdl.Event)
+	errc := scene.run(events, rend)
+	runtime.LockOSThread()
+	for {
+		select {
+		case events <- sdl.WaitEvent():
+		case err := <-errc:
+			return err
+		}
 	}
 }
 
