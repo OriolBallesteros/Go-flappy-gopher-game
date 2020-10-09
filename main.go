@@ -10,6 +10,8 @@ import (
 	"github.com/veandco/go-sdl2/ttf"
 )
 
+// TODO: refactor params names, or short or long
+// TODO: 600 as Windows size to constant
 func main() {
 	if err := run(); err != nil {
 		fmt.Fprintf(os.Stderr, "%v", err)
@@ -36,7 +38,7 @@ func run() error {
 	defer wind.Destroy()
 
 	// Show title
-	if err := drawTitle(rend); err != nil {
+	if err := drawTitle(rend, "Flappy Gopher"); err != nil {
 		fmt.Errorf("Could not drawTitle: %v", err)
 	}
 	time.Sleep(2 * time.Second)
@@ -48,7 +50,7 @@ func run() error {
 	}
 	defer scene.destroy()
 
-	// Run scene; goRoutine
+	// Run scene
 	events := make(chan sdl.Event)
 	errc := scene.run(events, rend)
 	runtime.LockOSThread()
@@ -61,13 +63,13 @@ func run() error {
 	}
 }
 
-func drawTitle(renderer *sdl.Renderer) error {
+func drawTitle(renderer *sdl.Renderer, text string) error {
 	// Renderer management
 	renderer.Clear()
 	defer renderer.Present()
 
 	// Get font
-	font, err := ttf.OpenFont("res/fonts/Flappy.ttf", 20)
+	font, err := ttf.OpenFont("res/fonts/Flappy.ttf", 14)
 	if err != nil {
 		return fmt.Errorf("Could not load font: %v", err)
 	}
@@ -75,7 +77,7 @@ func drawTitle(renderer *sdl.Renderer) error {
 
 	// Write message
 	c := sdl.Color{R: 255, G: 100, B: 0, A: 255}
-	surface, err := font.RenderUTF8Solid("Flappy Gopher", c)
+	surface, err := font.RenderUTF8Solid(text, c)
 	if err != nil {
 		return fmt.Errorf("Could not render title: %v", err)
 	}
