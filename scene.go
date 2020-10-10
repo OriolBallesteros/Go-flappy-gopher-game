@@ -15,44 +15,45 @@ type scene struct {
 	pipes      *pipes
 }
 
-func newScene(rend *sdl.Renderer) (*scene, error) {
+func newScene(renderer *sdl.Renderer) (*scene, error) {
 	// Load background of the scene
-	bg, err := img.LoadTexture(rend, "res/img/bmp/background.bmp")
+	background, err := img.LoadTexture(renderer, "res/img/bmp/background.bmp")
 	if err != nil {
 		return nil, fmt.Errorf("Could not load background image: %v", err)
 	}
 
 	// Load bird for the scene
-	bird, err := newBird(rend)
+	bird, err := newBird(renderer)
 	if err != nil {
 		return nil, err
 	}
 
-	pipes, err := newPipes(rend)
+	// Load pipes for the scene
+	pipes, err := newPipes(renderer)
 	if err != nil {
 		return nil, err
 	}
 
-	return &scene{background: bg, bird: bird, pipes: pipes}, nil
+	return &scene{background: background, bird: bird, pipes: pipes}, nil
 }
 
-func (scene *scene) paint(rend *sdl.Renderer) error {
+func (scene *scene) paint(renderer *sdl.Renderer) error {
 	// Renderer management
-	rend.Clear()
-	defer rend.Present()
+	renderer.Clear()
+	defer renderer.Present()
 
 	// Render background
-	if err := rend.Copy(scene.background, nil, nil); err != nil {
+	if err := renderer.Copy(scene.background, nil, nil); err != nil {
 		return fmt.Errorf("Could not copy background: %v", err)
 	}
 
 	// Render animated bird
-	if err := scene.bird.paint(rend); err != nil {
+	if err := scene.bird.paint(renderer); err != nil {
 		return err
 	}
 
 	// Render pipes
-	if err := scene.pipes.paint(rend); err != nil {
+	if err := scene.pipes.paint(renderer); err != nil {
 		return err
 	}
 

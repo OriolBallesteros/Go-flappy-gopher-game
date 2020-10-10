@@ -10,14 +10,17 @@ import (
 	"github.com/veandco/go-sdl2/ttf"
 )
 
-// TODO: refactor params names, or short or long
-// TODO: 600 as Windows size to constant
 func main() {
 	if err := run(); err != nil {
 		fmt.Fprintf(os.Stderr, "%v", err)
 		os.Exit(2)
 	}
 }
+
+const (
+	windowWidth  = 800
+	windowHeight = 600
+)
 
 func run() error {
 	err := sdl.Init(sdl.INIT_EVERYTHING)
@@ -31,20 +34,20 @@ func run() error {
 	}
 	defer ttf.Quit()
 
-	wind, rend, err := sdl.CreateWindowAndRenderer(800, 600, sdl.WINDOW_SHOWN)
+	window, renderer, err := sdl.CreateWindowAndRenderer(windowWidth, windowHeight, sdl.WINDOW_SHOWN)
 	if err != nil {
 		fmt.Errorf("Could not create window: %v", err)
 	}
-	defer wind.Destroy()
+	defer window.Destroy()
 
 	// Show title
-	if err := drawTitle(rend, "Flappy Gopher"); err != nil {
+	if err := drawTitle(renderer, "Flappy Gopher"); err != nil {
 		fmt.Errorf("Could not drawTitle: %v", err)
 	}
 	time.Sleep(2 * time.Second)
 
 	// Show scene
-	scene, err := newScene(rend)
+	scene, err := newScene(renderer)
 	if err != nil {
 		fmt.Errorf("Could not create scene: %v", err)
 	}
@@ -52,7 +55,7 @@ func run() error {
 
 	// Run scene
 	events := make(chan sdl.Event)
-	errc := scene.run(events, rend)
+	errc := scene.run(events, renderer)
 	runtime.LockOSThread()
 	for {
 		select {
@@ -76,22 +79,22 @@ func drawTitle(renderer *sdl.Renderer, text string) error {
 	defer font.Close()
 
 	// Write message
-	c := sdl.Color{R: 255, G: 100, B: 0, A: 255}
-	surface, err := font.RenderUTF8Solid(text, c)
+	color := sdl.Color{R: 255, G: 100, B: 0, A: 255}
+	surface, err := font.RenderUTF8Solid(text, color)
 	if err != nil {
 		return fmt.Errorf("Could not render title: %v", err)
 	}
 	defer surface.Free()
 
 	// Get it ready for renderer
-	tex, err := renderer.CreateTextureFromSurface(surface)
+	texture, err := renderer.CreateTextureFromSurface(surface)
 	if err != nil {
 		return fmt.Errorf("Could not create texture: %v", err)
 	}
-	defer tex.Destroy()
+	defer texture.Destroy()
 
 	// Show it
-	if err := renderer.Copy(tex, nil, nil); err != nil {
+	if err := renderer.Copy(texture, nil, nil); err != nil {
 		return fmt.Errorf("Could not copy texture: %v", err)
 	}
 

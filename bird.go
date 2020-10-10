@@ -24,12 +24,12 @@ type bird struct {
 	dead  bool
 }
 
-func newBird(rend *sdl.Renderer) (*bird, error) {
+func newBird(renderer *sdl.Renderer) (*bird, error) {
 	// Load birds images as an animation
 	var textures []*sdl.Texture
 	for j := 1; j <= 4; j++ {
 		path := fmt.Sprintf("res/img/bmp/bird_frame_%d.bmp", j)
-		texture, err := img.LoadTexture(rend, path)
+		texture, err := img.LoadTexture(renderer, path)
 		if err != nil {
 			return nil, fmt.Errorf("Could not load bird image: %v", err)
 		}
@@ -39,82 +39,82 @@ func newBird(rend *sdl.Renderer) (*bird, error) {
 	return &bird{textures: textures, x: 10, y: 300, w: 50, h: 43}, nil
 }
 
-func (b *bird) paint(rend *sdl.Renderer) error {
-	b.mutex.RLock()
-	defer b.mutex.RUnlock()
+func (bird *bird) paint(renderer *sdl.Renderer) error {
+	bird.mutex.RLock()
+	defer bird.mutex.RUnlock()
 
 	// Set position and render bird image
-	rect := &sdl.Rect{X: b.x, Y: (600 - b.y) - b.h/2, W: b.w, H: b.h}
+	rect := &sdl.Rect{X: bird.x, Y: (windowHeight - bird.y) - bird.h/2, W: bird.w, H: bird.h}
 
-	i := b.time / 10 % len(b.textures)
-	if err := rend.Copy(b.textures[i], nil, rect); err != nil {
+	i := bird.time / 10 % len(bird.textures)
+	if err := renderer.Copy(bird.textures[i], nil, rect); err != nil {
 		return fmt.Errorf("Could not copy bird: %v", err)
 	}
 
 	return nil
 }
 
-func (b *bird) update() {
-	b.mutex.Lock()
-	defer b.mutex.Unlock()
+func (bird *bird) update() {
+	bird.mutex.Lock()
+	defer bird.mutex.Unlock()
 
 	// Bird physics
-	b.time++
-	b.y -= int32(b.speed)
-	if b.y < 0 {
-		b.dead = true
+	bird.time++
+	bird.y -= int32(bird.speed)
+	if bird.y < 0 {
+		bird.dead = true
 	}
-	b.speed += gravity
+	bird.speed += gravity
 
 }
 
-func (b *bird) jump() {
-	b.mutex.Lock()
-	defer b.mutex.Unlock()
+func (bird *bird) jump() {
+	bird.mutex.Lock()
+	defer bird.mutex.Unlock()
 
-	b.speed = -jumpSpeed
+	bird.speed = -jumpSpeed
 }
 
-func (b *bird) isDead() bool {
-	b.mutex.RLock()
-	defer b.mutex.RUnlock()
+func (bird *bird) isDead() bool {
+	bird.mutex.RLock()
+	defer bird.mutex.RUnlock()
 
-	return b.dead
+	return bird.dead
 }
 
-func (b *bird) restart() {
-	b.mutex.Lock()
-	defer b.mutex.Unlock()
+func (bird *bird) restart() {
+	bird.mutex.Lock()
+	defer bird.mutex.Unlock()
 
-	b.y = 300
-	b.speed = 0
-	b.dead = false
+	bird.y = 300
+	bird.speed = 0
+	bird.dead = false
 }
 
-func (b *bird) touch(pipe *pipe) {
-	b.mutex.Lock()
-	defer b.mutex.Unlock()
+func (bird *bird) touch(pipe *pipe) {
+	bird.mutex.Lock()
+	defer bird.mutex.Unlock()
 
-	if pipe.x > b.x+b.w { // not touching, too far right
+	if pipe.x > bird.x+bird.w { // not touching, too far right
 		return
 	}
-	if pipe.x+pipe.w < b.x { //not touching, too far left
+	if pipe.x+pipe.w < bird.x { //not touching, too far left
 		return
 	}
-	if !pipe.inverted && pipe.h < b.y-b.h/2 { // not touching, pipe is too low
+	if !pipe.inverted && pipe.h < bird.y-bird.h/2 { // not touching, pipe is too low
 		return
 	}
-	if pipe.inverted && 600-pipe.h > b.y+b.h/2 { // inverted pipe is too high
+	if pipe.inverted && windowHeight-pipe.h > bird.y+bird.h/2 { // inverted pipe is too high
 		return
 	}
-	b.dead = true
+	bird.dead = true
 }
 
-func (b *bird) destroy() {
-	b.mutex.Lock()
-	defer b.mutex.Unlock()
+func (bird *bird) destroy() {
+	bird.mutex.Lock()
+	defer bird.mutex.Unlock()
 
-	for _, tex := range b.textures {
-		tex.Destroy()
+	for _, texture := range bird.textures {
+		texture.Destroy()
 	}
 }
